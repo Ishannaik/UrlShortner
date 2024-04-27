@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { customAlphabet } = require("nanoid");
 
 // Define the alphabet including lowercase letters, uppercase letters, and numbers
 const alphabet =
@@ -8,10 +9,7 @@ const alphabet =
 const idLength = 6;
 
 // Generate a custom Nano ID function using the specified alphabet and length
-const generateCustomUrlID = async () => {
-  const { customAlphabet } = await import("nanoid");
-  return customAlphabet(alphabet, idLength);
-};
+const generateCustomUrlID = customAlphabet(alphabet, idLength);
 
 // Define the model
 const shortUrlSchema = new mongoose.Schema({
@@ -22,7 +20,7 @@ const shortUrlSchema = new mongoose.Schema({
   short: {
     type: String,
     required: true,
-    default: async () => await generateCustomUrlID(),
+    default: generateCustomUrlID, // Use the generated Nano ID function as default value
   },
   clicks: {
     type: Number,
