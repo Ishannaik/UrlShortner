@@ -1,35 +1,52 @@
+const express = require("express");
 const mongoose = require("mongoose");
+const ShortUrl = require("./models/shortUrl");
+const app = express();
 
-// Define the alphabet including lowercase letters, uppercase letters, and numbers
-const alphabet =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-// Define the length of the generated ID
-const idLength = 6;
-
-// Generate a custom Nano ID function using the specified alphabet and length
-const generateCustomUrlID = async () => {
-  const { customAlphabet } = await import("nanoid");
-  return customAlphabet(alphabet, idLength);
-};
-
-// Define the model
-const shortUrlSchema = new mongoose.Schema({
-  full: {
-    type: String,
-    required: true,
-  },
-  short: {
-    type: String,
-    required: true,
-    default: async () => await generateCustomUrlID(),
-  },
-  clicks: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
+mongoose.connect("mongodb://localhost/urlShortener", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-// Export the model
-module.exports = mongoose.model("ShortUrl", shortUrlSchema);
+// Once connected, do something
+mongoose.connection.on("connected", () => {
+  console.log("Connected to MongoDB");
+});
+
+// If connection fails
+mongoose.connection.on("error", (err) => {
+  console.error("Failed to connect to MongoDB", err);
+});
+
+// If connection is disconnected
+mongoose.connection.on("disconnected", () => {
+  console.log("Disconnected from MongoDB");
+});
+
+app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: false }));
+
+app.get("/", async (req, res) => {
+  const shortUrls = await ShortUrl.find();
+  res.render("index", { shortUrls: shortUrls });
+});
+
+app.post("/shortUrls", async (req, res) => {
+  await ShortUrl.create({ full: req.body.fullUrl });
+  res.redirect("/");
+});
+
+app.get("/:shortUrl", async (req, res) => {
+  const shortUrl = await ShortUrl.findOne({ short: req.params.shortUrl });
+  if (shortUrl == null) return res.sendStatus(404);
+
+  shortUrl.clicks++;
+  shortUrl.save();
+
+  res.redirect(shortUrl.full);
+});
+
+app.listen(process.env.PORT || 5000, () => {
+  const port = process.env.PORT || 5000;
+  console.log(`Server is running on port http://localhost:${port}`);
+});

@@ -9,7 +9,7 @@ const alphabet =
 const idLength = 6;
 
 // Generate a custom Nano ID function using the specified alphabet and length
-const generateCustomUrlID = customAlphabet(alphabet, idLength);
+const generateCustomUrlID = () => customAlphabet(alphabet, idLength)();
 
 // Define the model
 const shortUrlSchema = new mongoose.Schema({
@@ -20,7 +20,7 @@ const shortUrlSchema = new mongoose.Schema({
   short: {
     type: String,
     required: true,
-    default: generateCustomUrlID, // Use the generated Nano ID function as default value
+    default: generateCustomUrlID, // Use the generated Nano ID function directly
   },
   clicks: {
     type: Number,
